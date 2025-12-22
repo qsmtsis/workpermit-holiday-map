@@ -484,6 +484,21 @@
         allWorks = works;
         document.getElementById('workCount').textContent = `(${works.length} รายการ)`;
         
+        // ✅ FIX: โหลดแผนที่ตาม dropdown selection ก่อนเสมอ
+        const filterPlant = document.getElementById('filterPlant').value;
+        if (filterPlant) {
+            // มีเลือก Plant (TSIS หรือ TSPT1) → แสดงแผนที่
+            loadMap(filterPlant);
+        } else {
+            // ไม่ได้เลือก Plant (ทั้งหมด) → แสดงข้อความแจ้งเตือน
+            document.getElementById('currentPlant').textContent = 'กรุณาเลือก Plant';
+            document.getElementById('mapWrapper').innerHTML = `
+                <div class="loading">
+                    <p style="color: #667eea; font-size: 16px;">📍 กรุณาเลือก Plant จาก Dropdown ด้านบนเพื่อดูแผนที่</p>
+                </div>
+            `;
+        }
+        
         if (works.length === 0) {
             document.getElementById('tableContainer').innerHTML = `
                 <div class="loading">
@@ -534,21 +549,6 @@
         
         tableHTML += `</tbody></table>`;
         document.getElementById('tableContainer').innerHTML = tableHTML;
-        
-        // ✅ FIX: แสดงแผนที่เฉพาะเมื่อมีการเลือก Plant เท่านั้น
-        const filterPlant = document.getElementById('filterPlant').value;
-        if (filterPlant) {
-            // มีเลือก Plant (TSIS หรือ TSPT1) → แสดงแผนที่
-            loadMap(filterPlant);
-        } else {
-            // ไม่ได้เลือก Plant (ทั้งหมด) → แสดงข้อความแจ้งเตือน
-            document.getElementById('currentPlant').textContent = 'กรุณาเลือก Plant';
-            document.getElementById('mapWrapper').innerHTML = `
-                <div class="loading">
-                    <p style="color: #667eea; font-size: 16px;">📍 กรุณาเลือก Plant จาก Dropdown ด้านบนเพื่อดูแผนที่</p>
-                </div>
-            `;
-        }
     }
     
     async function loadMap(plant) {
@@ -629,7 +629,13 @@
             work.plant === plant && work.locations.length > 0
         );
         
-        debugLog(`📍 Displaying ${worksToShow.length} markers`, 'info');
+        debugLog(`📍 Displaying ${worksToShow.length} markers for ${plant}`, 'info');
+        
+        if (worksToShow.length === 0) {
+            debugLog(`ℹ️ No markers found for ${plant} - showing empty map`, 'info');
+            return; // ✅ แสดงแผนที่ว่างเปล่า
+        }
+        
         debugLog(`Image dimensions: ${mapImage.width}x${mapImage.height}`, 'info');
         
         worksToShow.forEach((work) => {
