@@ -239,241 +239,273 @@
             </div>
         </div>
     </div>
+
+<script>
+    // ✅ ใส่ Apps Script Web App URL ที่นี่
+    const API_URL = 'https://script.google.com/macros/s/AKfycbyWiWM_PTsyDzsqqQRGi8LsK3ruLbdvxw8arpr_oRnwkuVqhr7VH4Gnhz4QyYrAVsd2bQ/exec';
     
-    <script>
-        // ✅ ใส่ Apps Script Web App URL ที่นี่
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyWiWM_PTsyDzsqqQRGi8LsK3ruLbdvxw8arpr_oRnwkuVqhr7VH4Gnhz4QyYrAVsd2bQ/exec';
+    let allWorks = [];
+    let currentMapImage = null;
+    
+    // ========================================
+    // 🚀 INITIALIZATION
+    // ========================================
+    window.onload = function() {
+        console.log('🚀 GitHub Pages + Apps Script API');
+        console.log('API URL:', API_URL);
         
-        let allWorks = [];
-        let currentMapImage = null;
+        checkAPIConnection();
+        loadApprovedWorks();
+    };
+    
+    // ========================================
+    // 🔌 API CONNECTION & DATA FETCHING
+    // ========================================
+    
+    // ✅ ตรวจสอบการเชื่อมต่อ API
+    async function checkAPIConnection() {
+        const badge = document.getElementById('versionBadge');
         
-        window.onload = function() {
-            console.log('🚀 GitHub Pages + Apps Script API');
-            console.log('API URL:', API_URL);
+        try {
+            const response = await fetch(`${API_URL}?action=version`);
+            const result = await response.json();
             
-            checkAPIConnection();
-            loadApprovedWorks();
-        };
-        
-        // ✅ ตรวจสอบการเชื่อมต่อ API
-        async function checkAPIConnection() {
-            const badge = document.getElementById('versionBadge');
+            console.log('✅ API Connected:', result);
             
-            try {
-                const response = await fetch(`${API_URL}?action=version`);
-                const result = await response.json();
-                
-                console.log('✅ API Connected:', result);
-                
-                if (result.success && result.version === 'API-2025') {
-                    badge.textContent = '✅ API Connected';
-                    badge.className = 'version-badge';
-                } else {
-                    badge.textContent = '⚠️ API Version Mismatch';
-                    badge.className = 'version-badge error';
-                }
-            } catch (error) {
-                console.error('❌ API Connection Failed:', error);
-                badge.textContent = '❌ API Error';
+            if (result.success && result.version === 'API-2025') {
+                badge.textContent = '✅ API Connected';
+                badge.className = 'version-badge';
+            } else {
+                badge.textContent = '⚠️ API Version Mismatch';
                 badge.className = 'version-badge error';
             }
+        } catch (error) {
+            console.error('❌ API Connection Failed:', error);
+            badge.textContent = '❌ API Error';
+            badge.className = 'version-badge error';
         }
+    }
+    
+    // ✅ ดึงข้อมูลงานทั้งหมด
+    async function loadApprovedWorks() {
+        const filterPlant = document.getElementById('filterPlant').value;
+        const filterDate = document.getElementById('filterDate').value;
+        const filterSearch = document.getElementById('filterSearch').value;
         
-        // ✅ ดึงข้อมูลงาน
-        async function loadApprovedWorks() {
-            const filterPlant = document.getElementById('filterPlant').value;
-            const filterDate = document.getElementById('filterDate').value;
-            const filterSearch = document.getElementById('filterSearch').value;
+        // แสดงสถานะกำลังโหลด
+        document.getElementById('tableContainer').innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>กำลังโหลดข้อมูล...</p>
+            </div>
+        `;
+        
+        try {
+            const url = `${API_URL}?action=getWorks&plant=${encodeURIComponent(filterPlant)}&date=${encodeURIComponent(filterDate)}&search=${encodeURIComponent(filterSearch)}`;
             
+            console.log('📡 Fetching:', url);
+            
+            const response = await fetch(url);
+            const result = await response.json();
+            
+            console.log('✅ Response:', result);
+            
+            if (result.success) {
+                displayWorks(result.data);
+            } else {
+                throw new Error(result.error || 'Unknown error');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error:', error);
             document.getElementById('tableContainer').innerHTML = `
                 <div class="loading">
-                    <div class="loading-spinner"></div>
-                    <p>กำลังโหลดข้อมูล...</p>
+                    <p style="color: #ef4444;">❌ เกิดข้อผิดพลาด: ${error.message}</p>
+                    <p style="font-size: 12px; margin-top: 10px;">ตรวจสอบ API_URL และ Deployment</p>
                 </div>
             `;
-            
-            try {
-                const url = `${API_URL}?action=getWorks&plant=${encodeURIComponent(filterPlant)}&date=${encodeURIComponent(filterDate)}&search=${encodeURIComponent(filterSearch)}`;
-                
-                console.log('📡 Fetching:', url);
-                
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                console.log('✅ Response:', result);
-                
-                if (result.success) {
-                    displayWorks(result.data);
-                } else {
-                    throw new Error(result.error || 'Unknown error');
-                }
-                
-            } catch (error) {
-                console.error('❌ Error:', error);
-                document.getElementById('tableContainer').innerHTML = `
-                    <div class="loading">
-                        <p style="color: #ef4444;">❌ เกิดข้อผิดพลาด: ${error.message}</p>
-                        <p style="font-size: 12px; margin-top: 10px;">ตรวจสอบ API_URL และ Deployment</p>
-                    </div>
-                `;
-            }
+        }
+    }
+    
+    // ========================================
+    // 📊 DISPLAY FUNCTIONS
+    // ========================================
+    
+    // ✅ แสดงข้อมูลในตาราง
+    function displayWorks(works) {
+        console.log('📊 Displaying', works.length, 'works');
+        
+        allWorks = works;
+        document.getElementById('workCount').textContent = `(${works.length} รายการ)`;
+        
+        if (works.length === 0) {
+            document.getElementById('tableContainer').innerHTML = `
+                <div class="loading">
+                    <p>ไม่พบรายการงานที่ได้รับอนุมัติ</p>
+                </div>
+            `;
+            return;
         }
         
-        // ✅ แสดงข้อมูลในตาราง
-        function displayWorks(works) {
-            console.log('📊 Displaying', works.length, 'works');
-            
-            allWorks = works;
-            document.getElementById('workCount').textContent = `(${works.length} รายการ)`;
-            
-            if (works.length === 0) {
-                document.getElementById('tableContainer').innerHTML = `
-                    <div class="loading">
-                        <p>ไม่พบรายการงานที่ได้รับอนุมัติ</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            let tableHTML = `<table class="status-table"><thead><tr>
-                <th>ลำดับ</th><th>เลขคำขอ</th><th>Plant</th>
-                <th>ส่วน</th><th>แผนก</th><th>ผู้ควบคุมงาน</th>
-                <th>เบอร์โทร</th><th>วันปฏิบัติงาน</th><th>เวลา</th>
-                <th>รายละเอียด</th>
-                <th>K</th><th>L</th><th>M</th><th>N</th>
-                <th>O</th><th>P</th><th>Q</th><th>R</th>
-                <th>จุด</th><th>จัดการ</th>
-            </tr></thead><tbody>`;
-            
-            works.forEach((work, index) => {
-                tableHTML += `<tr onclick="highlightRow(${index})">
-                    <td><strong>${work.runningNumber}</strong></td>
-                    <td><strong>${work.requestNumber}</strong></td>
-                    <td><span class="plant-badge">${work.plant}</span></td>
-                    <td>${work.division}</td>
-                    <td>${work.department}</td>
-                    <td>${work.supervisorName}</td>
-                    <td>${work.supervisorPhone}</td>
-                    <td>${work.workDates}</td>
-                    <td>${work.workHours}</td>
-                    <td style="max-width:200px;overflow:hidden;">${work.projectDetails}</td>
-                    <td><span class="checkmark">${work.workTypes.general}</span></td>
-                    <td><span class="checkmark">${work.workTypes.hotWork}</span></td>
-                    <td><span class="checkmark">${work.workTypes.confinedSpace}</span></td>
-                    <td><span class="checkmark">${work.workTypes.workAtHeight}</span></td>
-                    <td><span class="checkmark">${work.workTypes.chemical}</span></td>
-                    <td><span class="checkmark">${work.workTypes.cerConfined}</span></td>
-                    <td><span class="checkmark">${work.workTypes.cerHeight}</span></td>
-                    <td>${work.workTypes.sds}</td>
-                    <td><strong>${work.locationCount}</strong></td>
-                    <td>
-                        <button class="btn-action btn-view-map" onclick="event.stopPropagation();showOnMap(${index})">🗺️</button>
-                        <a href="${work.workPermitUrl}" target="_blank" class="btn-action btn-permit">📄 WP</a>
-                        <a href="${work.jsaUrl}" target="_blank" class="btn-action btn-jsa">📄 JSA</a>
-                    </td>
-                </tr>`;
-            });
-            
-            tableHTML += `</tbody></table>`;
-            document.getElementById('tableContainer').innerHTML = tableHTML;
-            
-            const filterPlant = document.getElementById('filterPlant').value;
-            if (filterPlant) {
-                loadMap(filterPlant);
-            } else if (works.length > 0) {
-                loadMap(works[0].plant);
-            }
-        }
+        let tableHTML = `<table class="status-table"><thead><tr>
+            <th>ลำดับ</th><th>เลขคำขอ</th><th>Plant</th>
+            <th>ส่วน</th><th>แผนก</th><th>ผู้ควบคุมงาน</th>
+            <th>เบอร์โทร</th><th>วันปฏิบัติงาน</th><th>เวลา</th>
+            <th>รายละเอียด</th>
+            <th>K</th><th>L</th><th>M</th><th>N</th>
+            <th>O</th><th>P</th><th>Q</th><th>R</th>
+            <th>จุด</th><th>จัดการ</th>
+        </tr></thead><tbody>`;
         
-        // ✅ โหลดแผนที่
-        async function loadMap(plant) {
-            console.log('🗺️ Loading map:', plant);
-            document.getElementById('currentPlant').textContent = plant;
+        works.forEach((work, index) => {
+            tableHTML += `<tr onclick="highlightRow(${index})">
+                <td><strong>${work.runningNumber}</strong></td>
+                <td><strong>${work.requestNumber}</strong></td>
+                <td><span class="plant-badge">${work.plant}</span></td>
+                <td>${work.division}</td>
+                <td>${work.department}</td>
+                <td>${work.supervisorName}</td>
+                <td>${work.supervisorPhone}</td>
+                <td>${work.workDates}</td>
+                <td>${work.workHours}</td>
+                <td style="max-width:200px;overflow:hidden;" title="${work.projectDetails}">${work.projectDetails}</td>
+                <td><span class="checkmark">${work.workTypes.general}</span></td>
+                <td><span class="checkmark">${work.workTypes.hotWork}</span></td>
+                <td><span class="checkmark">${work.workTypes.confinedSpace}</span></td>
+                <td><span class="checkmark">${work.workTypes.workAtHeight}</span></td>
+                <td><span class="checkmark">${work.workTypes.chemical}</span></td>
+                <td><span class="checkmark">${work.workTypes.cerConfined}</span></td>
+                <td><span class="checkmark">${work.workTypes.cerHeight}</span></td>
+                <td>${work.workTypes.sds}</td>
+                <td><strong>${work.locationCount}</strong></td>
+                <td>
+                    <button class="btn-action btn-view-map" onclick="event.stopPropagation();showOnMap(${index})">🗺️</button>
+                    <a href="${work.workPermitUrl}" target="_blank" class="btn-action btn-permit">📄 WP</a>
+                    <a href="${work.jsaUrl}" target="_blank" class="btn-action btn-jsa">📄 JSA</a>
+                </td>
+            </tr>`;
+        });
+        
+        tableHTML += `</tbody></table>`;
+        document.getElementById('tableContainer').innerHTML = tableHTML;
+        
+        // โหลดแผนที่เริ่มต้น
+        const filterPlant = document.getElementById('filterPlant').value;
+        if (filterPlant) {
+            loadMap(filterPlant);
+        } else if (works.length > 0) {
+            loadMap(works[0].plant);
+        }
+    }
+    
+    // ========================================
+    // 🗺️ MAP FUNCTIONS
+    // ========================================
+    
+    // ✅ โหลดภาพแผนที่
+    async function loadMap(plant) {
+        console.log('🗺️ Loading map:', plant);
+        document.getElementById('currentPlant').textContent = plant;
+        
+        document.getElementById('mapWrapper').innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>กำลังโหลดแผนที่...</p>
+            </div>
+        `;
+        
+        try {
+            const url = `${API_URL}?action=getImage&plant=${encodeURIComponent(plant)}`;
+            const response = await fetch(url);
+            const result = await response.json();
             
+            if (result.success && result.data) {
+                displayMap(plant, result.data);
+            } else {
+                throw new Error('ไม่พบแผนที่สำหรับ Plant: ' + plant);
+            }
+            
+        } catch (error) {
+            console.error('❌ Map error:', error);
             document.getElementById('mapWrapper').innerHTML = `
                 <div class="loading">
-                    <div class="loading-spinner"></div>
-                    <p>กำลังโหลดแผนที่...</p>
+                    <p style="color: #ef4444;">❌ ไม่สามารถโหลดแผนที่ได้</p>
+                    <p style="font-size: 12px;">${error.message}</p>
                 </div>
             `;
-            
-            try {
-                const url = `${API_URL}?action=getImage&plant=${encodeURIComponent(plant)}`;
-                const response = await fetch(url);
-                const result = await response.json();
+        }
+    }
+    
+    // ✅ แสดงภาพแผนที่
+    function displayMap(plant, imageDataUrl) {
+        const mapWrapper = document.getElementById('mapWrapper');
+        currentMapImage = imageDataUrl;
+        
+        mapWrapper.innerHTML = `<img src="${imageDataUrl}" class="map-image" id="mapImage">`;
+        
+        const mapImage = document.getElementById('mapImage');
+        // รอให้ภาพโหลดเสร็จก่อนค่อยวาง markers
+        mapImage.onload = function() { displayAllMarkers(plant); };
+        // กรณีภาพโหลดเร็วมากๆ แล้ว
+        if (mapImage.complete) { displayAllMarkers(plant); }
+    }
+    
+    // ✅ แสดง markers บนแผนที่
+    function displayAllMarkers(plant) {
+        const mapWrapper = document.getElementById('mapWrapper');
+        
+        // ลบ marker เก่าออกก่อน
+        document.querySelectorAll('.marker').forEach(m => m.remove());
+        
+        // กรองเฉพาะงานที่ตรงกับ plant ที่เลือกและมีตำแหน่ง
+        const worksToShow = allWorks.filter(work => 
+            work.plant === plant && work.locations.length > 0
+        );
+        
+        worksToShow.forEach((work) => {
+            work.locations.forEach(loc => {
+                const marker = document.createElement('div');
+                marker.className = 'marker';
+                marker.style.left = `${loc.x}%`;
+                marker.style.top = `${loc.y}%`;
+                marker.textContent = loc.number;
+                marker.title = `เลขที่: ${work.requestNumber}\nรายละเอียด: ${work.projectDetails}`;
                 
-                if (result.success && result.data) {
-                    displayMap(plant, result.data);
-                } else {
-                    throw new Error('ไม่พบแผนที่');
-                }
-                
-            } catch (error) {
-                console.error('❌ Map error:', error);
-                document.getElementById('mapWrapper').innerHTML = `
-                    <div class="loading">
-                        <p style="color: #ef4444;">❌ ไม่สามารถโหลดแผนที่ได้</p>
-                    </div>
-                `;
-            }
-        }
-        
-        // ✅ แสดงแผนที่
-        function displayMap(plant, imageDataUrl) {
-            const mapWrapper = document.getElementById('mapWrapper');
-            currentMapImage = imageDataUrl;
-            
-            mapWrapper.innerHTML = `<img src="${imageDataUrl}" class="map-image" id="mapImage">`;
-            
-            const mapImage = document.getElementById('mapImage');
-            mapImage.onload = function() { displayAllMarkers(plant); };
-            if (mapImage.complete) { displayAllMarkers(plant); }
-        }
-        
-        // ✅ แสดง markers บนแผนที่
-        function displayAllMarkers(plant) {
-            const mapWrapper = document.getElementById('mapWrapper');
-            
-            document.querySelectorAll('.marker').forEach(m => m.remove());
-            
-            const worksToShow = allWorks.filter(work => 
-                work.plant === plant && work.locations.length > 0
-            );
-            
-            worksToShow.forEach((work) => {
-                work.locations.forEach(loc => {
-                    const marker = document.createElement('div');
-                    marker.className = 'marker';
-                    marker.style.left = `${loc.x}%`;
-                    marker.style.top = `${loc.y}%`;
-                    marker.textContent = loc.number;
-                    marker.title = `${work.requestNumber}`;
-                    
-                    mapWrapper.appendChild(marker);
-                });
+                mapWrapper.appendChild(marker);
             });
+        });
+    }
+    
+    // ========================================
+    // 🖱️ INTERACTION FUNCTIONS
+    // ========================================
+    
+    // ✅ แสดงตำแหน่งงานที่เลือกบนแผนที่
+    function showOnMap(index) {
+        const work = allWorks[index];
+        if (work.locationCount === 0) {
+            alert('ไม่มีข้อมูลตำแหน่งสำหรับงานนี้');
+            return;
         }
         
-        function showOnMap(index) {
-            const work = allWorks[index];
-            if (work.locationCount === 0) {
-                alert('ไม่มีข้อมูลตำแหน่งสำหรับงานนี้');
-                return;
-            }
-            
-            const currentPlant = document.getElementById('currentPlant').textContent;
-            if (currentPlant !== work.plant) {
-                loadMap(work.plant);
-            }
-            
-            document.querySelector('.map-section').scrollIntoView({ 
-                behavior: 'smooth', block: 'start' 
-            });
+        const currentPlant = document.getElementById('currentPlant').textContent;
+        // ถ้าแผนที่ที่แสดงอยู่ไม่ใช่ plant ของงานนี้ ให้โหลดใหม่
+        if (currentPlant !== work.plant) {
+            loadMap(work.plant);
         }
         
-        function highlightRow(index) {
-            console.log('Highlight row:', index);
-        }
-    </script>
+        // เลื่อนหน้าจอไปที่ส่วนของแผนที่
+        document.querySelector('.map-section').scrollIntoView({ 
+            behavior: 'smooth', block: 'start' 
+        });
+    }
+    
+    // ✅ ฟังก์ชันเมื่อคลิกแถวในตาราง (ยังไม่ได้ทำอะไร)
+    function highlightRow(index) {
+        console.log('Highlight row:', index);
+        // TODO: เพิ่ม logic สำหรับ highlight แถวที่เลือก หรือ highlight marker บนแผนที่
+    }
+</script>
+    
 </body>
 </html>
