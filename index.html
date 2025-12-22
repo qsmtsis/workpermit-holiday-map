@@ -121,13 +121,17 @@
             padding: 15px 20px; font-weight: 600; font-size: 16px;
         }
         
-        /* ✅ FIX 1: ให้ wrapper ไม่ scroll แนวนอน */
+        /* ✅ FIX 1: ให้ wrapper ไม่ scroll แนวนอน + กำหนดความสูง */
         .map-wrapper {
             position: relative; 
             background: #f7fafc;
-            min-height: 500px;
+            min-height: 400px; /* เพิ่มความสูงขั้นต่ำ */
+            max-height: 600px; /* กำหนดความสูงสูงสุด */
             max-width: 100%;
             overflow: hidden; /* เปลี่ยนจาก overflow: auto */
+            display: flex;
+            align-items: center; /* Center รูปในแนวตั้ง */
+            justify-content: center; /* Center รูปในแนวนอน */
         }
         
         /* ✅ FIX 2: ให้ container เป็น block ปกติ */
@@ -136,12 +140,13 @@
             width: 100%; /* เพิ่ม width: 100% */
         }
         
-        /* ✅ FIX 3: Scale รูปให้พอดี container */
+        /* ✅ FIX 3: Scale รูปให้เต็มความกว้าง */
         .map-image { 
             display: block;
-            width: 100%;    /* เปลี่ยนจาก width: auto */
+            width: 100%;    /* เต็มความกว้าง */
             height: auto;   /* รักษา aspect ratio */
-            max-width: 100%; /* ห้ามเกินขอบ */
+            max-width: none; /* ไม่จำกัดความกว้าง */
+            object-fit: contain; /* ให้รูปพอดีกล่อง */
         }
         
         /* ✅ FIX 4: Marker ใช้ % แทน px */
@@ -530,11 +535,19 @@
         tableHTML += `</tbody></table>`;
         document.getElementById('tableContainer').innerHTML = tableHTML;
         
+        // ✅ FIX: แสดงแผนที่เฉพาะเมื่อมีการเลือก Plant เท่านั้น
         const filterPlant = document.getElementById('filterPlant').value;
         if (filterPlant) {
+            // มีเลือก Plant (TSIS หรือ TSPT1) → แสดงแผนที่
             loadMap(filterPlant);
-        } else if (works.length > 0) {
-            loadMap(works[0].plant);
+        } else {
+            // ไม่ได้เลือก Plant (ทั้งหมด) → แสดงข้อความแจ้งเตือน
+            document.getElementById('currentPlant').textContent = 'กรุณาเลือก Plant';
+            document.getElementById('mapWrapper').innerHTML = `
+                <div class="loading">
+                    <p style="color: #667eea; font-size: 16px;">📍 กรุณาเลือก Plant จาก Dropdown ด้านบนเพื่อดูแผนที่</p>
+                </div>
+            `;
         }
     }
     
