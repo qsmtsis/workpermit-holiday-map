@@ -2,46 +2,61 @@
 // 🌐 CONFIGURATION
 // ============================
 
-// URL ของ Google Apps Script Web App
+// ⚠️ วาง URL ของ Google Apps Script ที่ Deploy แล้วตรงนี้!
 const GAS_API_URL = 'https://script.google.com/macros/s/AKfycbwrebx44UOwxqLLjxUjl8o1WfrWcAdq2WDVuIAHUBxeEPy5JA6NmQbToi6Di_fthgwZdg/exec';
 
 // ============================
-// 🚀 MAIN FUNCTIONS
+// 🚀 GLOBAL VARIABLES
 // ============================
 
 let allWorks = [];
 let currentMapImage = null;
 
-// ตรวจสอบเวอร์ชันทันทีที่โหลดหน้า
+// ============================
+// 🚀 INITIALIZATION
+// ============================
+
+// ตรวจสอบเวอร์ชันและโหลดข้อมูลเมื่อหน้าโหลด
 window.onload = function() {
+    console.log('=== Page Loaded ===');
     checkDeploymentVersion();
     loadApprovedWorks();
 };
 
-// ✅ ตรวจสอบว่า Deploy เวอร์ชันใหม่แล้วหรือไม่
+// ============================
+// 📡 API CALLS
+// ============================
+
+// ✅ ตรวจสอบเวอร์ชันของ Backend
 function checkDeploymentVersion() {
     console.log('=== Checking deployment version ===');
     
-    // เพิ่ม timestamp เพื่อบังคับ Browser Cache
+    // เพิ่ม timestamp เพื่อป้องกัน Browser Cache
     const timestamp = new Date().getTime();
     
+    // เรียก API พร้อมพารามิเตอร์
     fetch(`${GAS_API_URL}?action=checkVersion&t=${timestamp}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(result => {
             console.log('Version check result:', result);
             
             const badge = document.getElementById('versionBadge');
             
-            if (result && result.version === "4.0") {
-                badge.textContent = `✓ Version ${result.version}`;
+            if (result && result.success && result.version === "4.0") {
+                badge.textContent = `✓ Backend v${result.version}`;
                 badge.className = 'version-badge';
-                console.log('✓ Correct version deployed!');
+                console.log('✓ Correct backend version!');
             } else {
-                badge.textContent = `⚠️ v${result.version || 'Unknown'}`;
+                badge.textContent = `⚠️ Backend v${result.version || 'Unknown'}`;
                 badge.className = 'version-badge error';
-                console.error('❌ Wrong version! Need to redeploy.');
+                console.error('❌ Wrong backend version!');
                 
-                alert('⚠️ กรุณา Deploy ใหม่!\n\nขั้นตอน:\n1. Apps Script Editor\n2. Deploy > New deployment\n3. Deploy as Web app\n4. Refresh หน้านี้');
+                alert('⚠️ Backend API ต้องการอัปเดต!\n\nโปรดแจ้งผู้ดูแลนระบบ');
             }
         })
         .catch(error => {
@@ -53,11 +68,13 @@ function checkDeploymentVersion() {
         });
 }
 
+// 📋 โหลดข้อมูลงานที่อนุมัติ
 function loadApprovedWorks() {
     const filterPlant = document.getElementById('filterPlant').value;
     const filterDate = document.getElementById('filterDate').value;
     const filterSearch = document.getElementById('filterSearch').value;
     
+    // แสดงสถานะการโหลด
     document.getElementById('tableContainer').innerHTML = `
         <div class="loading">
             <div class="loading-spinner"></div>
@@ -65,14 +82,20 @@ function loadApprovedWorks() {
         </div>
     `;
     
-    console.log('=== Calling getApprovedWorks ===');
+    console.log('=== Calling getWorks API ===');
     console.log('Filters:', {filterPlant, filterDate, filterSearch});
     
-    // เพิ่ม timestamp เพื่อบังคับ Browser Cache
+    // เพิ่ม timestamp เพื่อป้องกัน Browser Cache
     const timestamp = new Date().getTime();
     
+    // เรียก API พร้อมพารามิเตอร์
     fetch(`${GAS_API_URL}?action=getWorks&plant=${filterPlant}&date=${filterDate}&search=${filterSearch}&t=${timestamp}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(works => {
             displayWorks(works);
         })
@@ -82,4 +105,28 @@ function loadApprovedWorks() {
         });
 }
 
-// ... (ฟังก์ชันอื่นๆ เช่น displayWorks, loadMap, etc. ย้ายมาจากเดิม) ...
+// ... (ฟังก์ชันอื่นๆ เหมือนเดิม: displayWorks, loadMap, etc.) ...
+
+// ============================
+// 🛠 ตัวจัดการข้อผิดพลาด
+// ============================
+
+function handleError(error) {
+    console.error('=== handleError called ===');
+    console.error('Error:', error);
+    
+    const tableContainer = document.getElementById('tableContainer');
+    
+    tableContainer.innerHTML = `
+        <div class="error-detail">
+            <h3>❌ เกิดข้อผิดพลาดในการเรียกข้อมูล</h3>
+            <p style="margin: 10px 0; color: #4a5568;">${error.message || 'Unknown error'}</p>
+            <div style="margin-top: 20px; padding: 15px; background: #fffbeb; border-radius: 8px; border: 1px solid #fbbf24;">
+                <strong>💡 วิธีแก้ไข:</strong>
+                <p style="margin-top: 8px;">1. ตรวจสอบว่า Backend API อัปเดตเป็น v4.0 แล้ว</p>
+                <p style="margin-top: 5px;">2. ลองรีเฟรชหน้าเว็บ (Ctrl+F5)</p>
+                <p style="margin-top: 5px;">3. ลองเปิดใน Incognito Window</p>
+            </div>
+        </div>
+    `;
+}
