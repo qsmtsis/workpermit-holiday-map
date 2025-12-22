@@ -121,28 +121,30 @@
             padding: 15px 20px; font-weight: 600; font-size: 16px;
         }
         
+        /* ✅ FIX 1: ให้ wrapper ไม่ scroll แนวนอน */
         .map-wrapper {
             position: relative; 
             background: #f7fafc;
             min-height: 500px;
-            overflow-x: auto;
-            overflow-y: auto;
             max-width: 100%;
+            overflow: hidden; /* เปลี่ยนจาก overflow: auto */
         }
         
+        /* ✅ FIX 2: ให้ container เป็น block ปกติ */
         .map-container-inner {
             position: relative;
-            display: inline-block;
-            min-width: min-content;
+            width: 100%; /* เพิ่ม width: 100% */
         }
         
+        /* ✅ FIX 3: Scale รูปให้พอดี container */
         .map-image { 
             display: block;
-            width: auto;
-            height: auto;
-            max-width: none;
+            width: 100%;    /* เปลี่ยนจาก width: auto */
+            height: auto;   /* รักษา aspect ratio */
+            max-width: 100%; /* ห้ามเกินขอบ */
         }
         
+        /* ✅ FIX 4: Marker ใช้ % แทน px */
         .marker {
             position: absolute;
             width: 40px; 
@@ -622,11 +624,10 @@
                 const marker = document.createElement('div');
                 marker.className = 'marker';
                 
-                const pixelX = (loc.x / 100) * mapImage.width;
-                const pixelY = (loc.y / 100) * mapImage.height;
+                // ✅ FIX: ใช้ % แทน pixel
+                marker.style.left = loc.x + '%';
+                marker.style.top = loc.y + '%';
                 
-                marker.style.left = pixelX + 'px';
-                marker.style.top = pixelY + 'px';
                 marker.textContent = loc.number;
                 marker.title = `เลขที่: ${work.requestNumber}\nรายละเอียด: ${work.projectDetails}`;
                 
@@ -635,7 +636,7 @@
                     alert(`จุดที่ ${loc.number}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}`);
                 });
                 
-                debugLog(`Marker ${loc.number}: ${loc.x}%, ${loc.y}% = ${pixelX}px, ${pixelY}px`, 'info');
+                debugLog(`Marker ${loc.number}: ${loc.x.toFixed(2)}%, ${loc.y.toFixed(2)}%`, 'info');
                 
                 mapContainer.appendChild(marker);
             });
