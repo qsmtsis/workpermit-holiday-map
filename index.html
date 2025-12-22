@@ -122,46 +122,50 @@
         }
         
         .map-wrapper {
-            position: relative; background: #f7fafc;
+            position: relative; 
+            background: #f7fafc;
             min-height: 500px;
-            overflow: auto; max-width: 100%;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-width: 100%;
         }
         
         .map-container-inner {
             position: relative;
             display: inline-block;
-            margin: auto;
+            min-width: min-content;
         }
         
         .map-image { 
-            max-width: 100%; height: auto; display: block;
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: none;
         }
         
         .marker {
             position: absolute;
-            min-width: 40px; 
+            width: 40px; 
             height: 40px;
-            padding: 0 5px;
-            background: #ef4444; 
+            background: rgba(239, 68, 68, 0.95); 
             color: white; 
-            border-radius: 20px;
+            border-radius: 50%;
             display: flex; 
             align-items: center; 
             justify-content: center;
             font-weight: bold; 
-            font-size: 14px; 
-            border: 3px solid white;
-            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.5);
+            font-size: 18px; 
+            border: 4px solid white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
             transform: translate(-50%, -50%); 
             cursor: pointer;
             transition: all 0.3s; 
             z-index: 10;
-            white-space: nowrap;
         }
         
         .marker:hover {
             transform: translate(-50%, -50%) scale(1.15);
-            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.7);
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.8);
             z-index: 100;
         }
         
@@ -581,14 +585,28 @@
         const mapImage = document.getElementById('mapImage');
         mapImage.onload = function() { 
             debugLog('✅ Map image rendered', 'success');
+            debugLog(`Image natural size: ${this.naturalWidth}x${this.naturalHeight}`, 'info');
+            debugLog(`Image display size: ${this.width}x${this.height}`, 'info');
             displayAllMarkers(plant); 
         };
-        if (mapImage.complete) { displayAllMarkers(plant); }
+        if (mapImage.complete) { 
+            debugLog(`Image already loaded: ${mapImage.naturalWidth}x${mapImage.naturalHeight}`, 'info');
+            displayAllMarkers(plant); 
+        }
     }
     
     function displayAllMarkers(plant) {
         const mapContainer = document.getElementById('mapContainerInner');
-        if (!mapContainer) return;
+        if (!mapContainer) {
+            debugLog('❌ Map container not found', 'error');
+            return;
+        }
+        
+        const mapImage = document.getElementById('mapImage');
+        if (!mapImage) {
+            debugLog('❌ Map image not found', 'error');
+            return;
+        }
         
         document.querySelectorAll('.marker').forEach(m => m.remove());
         
@@ -597,13 +615,18 @@
         );
         
         debugLog(`📍 Displaying ${worksToShow.length} markers`, 'info');
+        debugLog(`Image dimensions: ${mapImage.width}x${mapImage.height}`, 'info');
         
         worksToShow.forEach((work) => {
             work.locations.forEach(loc => {
                 const marker = document.createElement('div');
                 marker.className = 'marker';
-                marker.style.left = `${loc.x}%`;
-                marker.style.top = `${loc.y}%`;
+                
+                const pixelX = (loc.x / 100) * mapImage.width;
+                const pixelY = (loc.y / 100) * mapImage.height;
+                
+                marker.style.left = pixelX + 'px';
+                marker.style.top = pixelY + 'px';
                 marker.textContent = loc.number;
                 marker.title = `เลขที่: ${work.requestNumber}\nรายละเอียด: ${work.projectDetails}`;
                 
@@ -611,6 +634,8 @@
                     e.stopPropagation();
                     alert(`จุดที่ ${loc.number}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}`);
                 });
+                
+                debugLog(`Marker ${loc.number}: ${loc.x}%, ${loc.y}% = ${pixelX}px, ${pixelY}px`, 'info');
                 
                 mapContainer.appendChild(marker);
             });
