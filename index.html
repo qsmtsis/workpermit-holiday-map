@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>งานที่ได้รับอนุมัติ - แผนที่สถานที่ปฏิบัติงาน</title>
+    
+    <!-- เรียกใช้ไฟล์ CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Version Badge -->
+    <div class="version-badge" id="versionBadge">กำลังตรวจสอบ...</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ งานที่ได้รับอนุมัติ - แผนที่สถานที่ปฏิบัติงาน</h1>
+            <p>แสดงรายการงานที่ Column AE = "Approved" พร้อมตำแหน่งในแผนที่ (v4.0)</p>
+        </div>
+        
+        <div class="filters">
+            <div class="filter-group">
+                <label for="filterPlant">🏭 Plant:</label>
+                <select id="filterPlant">
+                    <option value="">ทั้งหมด</option>
+                    <option value="TSIS">TSIS</option>
+                    <option value="TSPT1">TSPT1</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="filterDate">📅 วันที่ปฏิบัติงาน:</label>
+                <input type="date" id="filterDate">
+            </div>
+            
+            <div class="filter-group">
+                <label for="filterSearch">🔍 ค้นหา:</label>
+                <input type="text" id="filterSearch" placeholder="ค้นหาเลขที่คำขอ, แผนก...">
+            </div>
+            
+            <button class="btn-search" onclick="loadApprovedWorks()">🔍 ค้นหา</button>
+        </div>
+        
+        <div class="content">
+            <!-- Map Section -->
+            <div class="map-section">
+                <div class="map-container">
+                    <div class="map-header">
+                        🗺️ แผนที่สถานที่ปฏิบัติงาน - <span id="currentPlant">เลือก Plant</span>
+                    </div>
+                    <div class="map-wrapper" id="mapWrapper">
+                        <div class="no-map">
+                            <div class="no-map-icon">🗺️</div>
+                            <p>กำลังโหลดข้อมูล...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Table Section -->
+            <div class="table-section">
+                <div class="table-header">
+                    📋 ตารางสถานะงานที่ได้รับอนุมัติ
+                    <span id="workCount" style="font-size: 16px; color: #667eea;">(0 รายการ)</span>
+                </div>
+                <div id="tableContainer">
+                    <div class="loading">
+                        <div class="loading-spinner"></div>
+                        <p>กำลังโหลดข้อมูล...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+    <!-- เรียกใช้ไฟล์ JavaScript ท้ายสุด -->
+    <script src="js/main.js"></script>
+</body>
+</html>
