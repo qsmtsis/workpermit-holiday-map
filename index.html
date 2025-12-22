@@ -3,19 +3,188 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>งานที่ได้รับอนุมัติ - แผนที่สถานที่ปฏิบัติงาน</title>
-    
-    <!-- เรียกใช้ไฟล์ CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <title>งานที่ได้รับอนุมัติ - GitHub Pages</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Sarabun', 'Tahoma', Arial, sans-serif;
+            font-size: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .version-badge {
+            position: fixed; top: 10px; right: 10px;
+            background: #10b981; color: white;
+            padding: 8px 16px; border-radius: 20px;
+            font-size: 12px; font-weight: 600;
+            z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .version-badge.error { background: #ef4444; }
+        
+        .container {
+            max-width: 1800px; margin: 0 auto;
+            background: white; border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; padding: 30px; text-align: center;
+        }
+        
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .header p { font-size: 16px; opacity: 0.9; }
+        
+        .filters {
+            padding: 25px 30px; background: #f7fafc;
+            border-bottom: 2px solid #e2e8f0;
+            display: flex; gap: 15px; flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        
+        .filter-group {
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        
+        .filter-group label {
+            font-weight: 600; font-size: 13px; color: #4a5568;
+        }
+        
+        .filter-group select, .filter-group input {
+            padding: 10px 15px; border: 2px solid #e2e8f0;
+            border-radius: 8px; font-size: 14px;
+            background: white; min-width: 200px;
+        }
+        
+        .btn-search {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; border-radius: 8px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            height: 42px;
+        }
+        
+        .content { padding: 30px; }
+        
+        .map-section { margin-bottom: 30px; }
+        
+        .map-container {
+            border: 3px solid #667eea; border-radius: 12px;
+            overflow: hidden; background: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .map-header {
+            background: #667eea; color: white;
+            padding: 15px 20px; font-weight: 600; font-size: 16px;
+        }
+        
+        .map-wrapper {
+            position: relative; background: #f7fafc;
+            min-height: 500px; display: flex;
+            align-items: center; justify-content: center;
+            overflow: auto;
+        }
+        
+        .map-image { max-width: 100%; height: auto; display: block; }
+        
+        .marker {
+            position: absolute; width: 35px; height: 35px;
+            background: #ef4444; color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 16px; border: 3px solid white;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.5);
+            transform: translate(-50%, -50%); cursor: pointer;
+            transition: all 0.3s; z-index: 10;
+        }
+        
+        .marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.7);
+        }
+        
+        .loading {
+            text-align: center; padding: 60px 20px; color: #718096;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #e2e8f0; border-top: 4px solid #667eea;
+            border-radius: 50%; width: 50px; height: 50px;
+            animation: spin 1s linear infinite; margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .table-section { margin-top: 30px; }
+        
+        .table-header {
+            font-size: 20px; font-weight: 600; color: #2d3748;
+            margin-bottom: 20px; padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex; justify-content: space-between;
+        }
+        
+        .status-table {
+            width: 100%; border-collapse: collapse;
+            background: white; font-size: 12px;
+        }
+        
+        .status-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .status-table th {
+            padding: 12px 8px; text-align: center;
+            font-weight: 600; white-space: nowrap; font-size: 11px;
+        }
+        
+        .status-table tbody tr {
+            border-bottom: 1px solid #e2e8f0;
+            cursor: pointer;
+        }
+        
+        .status-table tbody tr:hover { background: #f7fafc; }
+        
+        .status-table td {
+            padding: 10px 8px; vertical-align: middle; text-align: center;
+        }
+        
+        .plant-badge {
+            display: inline-block; padding: 5px 10px;
+            border-radius: 6px; font-size: 11px; font-weight: 600;
+            background: #dbeafe; color: #1e40af;
+        }
+        
+        .btn-action {
+            padding: 5px 10px; border: none; border-radius: 6px;
+            font-size: 11px; font-weight: 600; cursor: pointer;
+            text-decoration: none; display: inline-flex;
+            gap: 3px; margin: 2px;
+        }
+        
+        .btn-view-map { background: #3b82f6; color: white; }
+        .btn-permit { background: #667eea; color: white; }
+        .btn-jsa { background: #10b981; color: white; }
+        
+        .checkmark { color: #10b981; font-size: 16px; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <!-- Version Badge -->
-    <div class="version-badge" id="versionBadge">กำลังตรวจสอบ...</div>
+    <div class="version-badge" id="versionBadge">🔌 กำลังเชื่อมต่อ API...</div>
     
     <div class="container">
         <div class="header">
             <h1>🗺️ งานที่ได้รับอนุมัติ - แผนที่สถานที่ปฏิบัติงาน</h1>
-            <p>แสดงรายการงานที่ Column AE = "Approved" พร้อมตำแหน่งในแผนที่ (v4.0)</p>
+            <p>แสดงรายการงานที่ Column AE = "Approved" พร้อมตำแหน่งในแผนที่ (GitHub Pages + Apps Script API)</p>
         </div>
         
         <div class="filters">
@@ -42,22 +211,20 @@
         </div>
         
         <div class="content">
-            <!-- Map Section -->
             <div class="map-section">
                 <div class="map-container">
                     <div class="map-header">
                         🗺️ แผนที่สถานที่ปฏิบัติงาน - <span id="currentPlant">เลือก Plant</span>
                     </div>
                     <div class="map-wrapper" id="mapWrapper">
-                        <div class="no-map">
-                            <div class="no-map-icon">🗺️</div>
-                            <p>กำลังโหลดข้อมูล...</p>
+                        <div class="loading">
+                            <div class="loading-spinner"></div>
+                            <p>กรุณาเลือก Plant</p>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Table Section -->
             <div class="table-section">
                 <div class="table-header">
                     📋 ตารางสถานะงานที่ได้รับอนุมัติ
@@ -71,8 +238,242 @@
                 </div>
             </div>
         </div>
+    </div>
     
-    <!-- เรียกใช้ไฟล์ JavaScript ท้ายสุด -->
-    <script src="js/main.js"></script>
+    <script>
+        // ✅ ใส่ Apps Script Web App URL ที่นี่
+        const API_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+        
+        let allWorks = [];
+        let currentMapImage = null;
+        
+        window.onload = function() {
+            console.log('🚀 GitHub Pages + Apps Script API');
+            console.log('API URL:', API_URL);
+            
+            checkAPIConnection();
+            loadApprovedWorks();
+        };
+        
+        // ✅ ตรวจสอบการเชื่อมต่อ API
+        async function checkAPIConnection() {
+            const badge = document.getElementById('versionBadge');
+            
+            try {
+                const response = await fetch(`${API_URL}?action=version`);
+                const result = await response.json();
+                
+                console.log('✅ API Connected:', result);
+                
+                if (result.success && result.version === 'API-2025') {
+                    badge.textContent = '✅ API Connected';
+                    badge.className = 'version-badge';
+                } else {
+                    badge.textContent = '⚠️ API Version Mismatch';
+                    badge.className = 'version-badge error';
+                }
+            } catch (error) {
+                console.error('❌ API Connection Failed:', error);
+                badge.textContent = '❌ API Error';
+                badge.className = 'version-badge error';
+            }
+        }
+        
+        // ✅ ดึงข้อมูลงาน
+        async function loadApprovedWorks() {
+            const filterPlant = document.getElementById('filterPlant').value;
+            const filterDate = document.getElementById('filterDate').value;
+            const filterSearch = document.getElementById('filterSearch').value;
+            
+            document.getElementById('tableContainer').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>กำลังโหลดข้อมูล...</p>
+                </div>
+            `;
+            
+            try {
+                const url = `${API_URL}?action=getWorks&plant=${encodeURIComponent(filterPlant)}&date=${encodeURIComponent(filterDate)}&search=${encodeURIComponent(filterSearch)}`;
+                
+                console.log('📡 Fetching:', url);
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                console.log('✅ Response:', result);
+                
+                if (result.success) {
+                    displayWorks(result.data);
+                } else {
+                    throw new Error(result.error || 'Unknown error');
+                }
+                
+            } catch (error) {
+                console.error('❌ Error:', error);
+                document.getElementById('tableContainer').innerHTML = `
+                    <div class="loading">
+                        <p style="color: #ef4444;">❌ เกิดข้อผิดพลาด: ${error.message}</p>
+                        <p style="font-size: 12px; margin-top: 10px;">ตรวจสอบ API_URL และ Deployment</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // ✅ แสดงข้อมูลในตาราง
+        function displayWorks(works) {
+            console.log('📊 Displaying', works.length, 'works');
+            
+            allWorks = works;
+            document.getElementById('workCount').textContent = `(${works.length} รายการ)`;
+            
+            if (works.length === 0) {
+                document.getElementById('tableContainer').innerHTML = `
+                    <div class="loading">
+                        <p>ไม่พบรายการงานที่ได้รับอนุมัติ</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let tableHTML = `<table class="status-table"><thead><tr>
+                <th>ลำดับ</th><th>เลขคำขอ</th><th>Plant</th>
+                <th>ส่วน</th><th>แผนก</th><th>ผู้ควบคุมงาน</th>
+                <th>เบอร์โทร</th><th>วันปฏิบัติงาน</th><th>เวลา</th>
+                <th>รายละเอียด</th>
+                <th>K</th><th>L</th><th>M</th><th>N</th>
+                <th>O</th><th>P</th><th>Q</th><th>R</th>
+                <th>จุด</th><th>จัดการ</th>
+            </tr></thead><tbody>`;
+            
+            works.forEach((work, index) => {
+                tableHTML += `<tr onclick="highlightRow(${index})">
+                    <td><strong>${work.runningNumber}</strong></td>
+                    <td><strong>${work.requestNumber}</strong></td>
+                    <td><span class="plant-badge">${work.plant}</span></td>
+                    <td>${work.division}</td>
+                    <td>${work.department}</td>
+                    <td>${work.supervisorName}</td>
+                    <td>${work.supervisorPhone}</td>
+                    <td>${work.workDates}</td>
+                    <td>${work.workHours}</td>
+                    <td style="max-width:200px;overflow:hidden;">${work.projectDetails}</td>
+                    <td><span class="checkmark">${work.workTypes.general}</span></td>
+                    <td><span class="checkmark">${work.workTypes.hotWork}</span></td>
+                    <td><span class="checkmark">${work.workTypes.confinedSpace}</span></td>
+                    <td><span class="checkmark">${work.workTypes.workAtHeight}</span></td>
+                    <td><span class="checkmark">${work.workTypes.chemical}</span></td>
+                    <td><span class="checkmark">${work.workTypes.cerConfined}</span></td>
+                    <td><span class="checkmark">${work.workTypes.cerHeight}</span></td>
+                    <td>${work.workTypes.sds}</td>
+                    <td><strong>${work.locationCount}</strong></td>
+                    <td>
+                        <button class="btn-action btn-view-map" onclick="event.stopPropagation();showOnMap(${index})">🗺️</button>
+                        <a href="${work.workPermitUrl}" target="_blank" class="btn-action btn-permit">📄 WP</a>
+                        <a href="${work.jsaUrl}" target="_blank" class="btn-action btn-jsa">📄 JSA</a>
+                    </td>
+                </tr>`;
+            });
+            
+            tableHTML += `</tbody></table>`;
+            document.getElementById('tableContainer').innerHTML = tableHTML;
+            
+            const filterPlant = document.getElementById('filterPlant').value;
+            if (filterPlant) {
+                loadMap(filterPlant);
+            } else if (works.length > 0) {
+                loadMap(works[0].plant);
+            }
+        }
+        
+        // ✅ โหลดแผนที่
+        async function loadMap(plant) {
+            console.log('🗺️ Loading map:', plant);
+            document.getElementById('currentPlant').textContent = plant;
+            
+            document.getElementById('mapWrapper').innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>กำลังโหลดแผนที่...</p>
+                </div>
+            `;
+            
+            try {
+                const url = `${API_URL}?action=getImage&plant=${encodeURIComponent(plant)}`;
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    displayMap(plant, result.data);
+                } else {
+                    throw new Error('ไม่พบแผนที่');
+                }
+                
+            } catch (error) {
+                console.error('❌ Map error:', error);
+                document.getElementById('mapWrapper').innerHTML = `
+                    <div class="loading">
+                        <p style="color: #ef4444;">❌ ไม่สามารถโหลดแผนที่ได้</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // ✅ แสดงแผนที่
+        function displayMap(plant, imageDataUrl) {
+            const mapWrapper = document.getElementById('mapWrapper');
+            currentMapImage = imageDataUrl;
+            
+            mapWrapper.innerHTML = `<img src="${imageDataUrl}" class="map-image" id="mapImage">`;
+            
+            const mapImage = document.getElementById('mapImage');
+            mapImage.onload = function() { displayAllMarkers(plant); };
+            if (mapImage.complete) { displayAllMarkers(plant); }
+        }
+        
+        // ✅ แสดง markers บนแผนที่
+        function displayAllMarkers(plant) {
+            const mapWrapper = document.getElementById('mapWrapper');
+            
+            document.querySelectorAll('.marker').forEach(m => m.remove());
+            
+            const worksToShow = allWorks.filter(work => 
+                work.plant === plant && work.locations.length > 0
+            );
+            
+            worksToShow.forEach((work) => {
+                work.locations.forEach(loc => {
+                    const marker = document.createElement('div');
+                    marker.className = 'marker';
+                    marker.style.left = `${loc.x}%`;
+                    marker.style.top = `${loc.y}%`;
+                    marker.textContent = loc.number;
+                    marker.title = `${work.requestNumber}`;
+                    
+                    mapWrapper.appendChild(marker);
+                });
+            });
+        }
+        
+        function showOnMap(index) {
+            const work = allWorks[index];
+            if (work.locationCount === 0) {
+                alert('ไม่มีข้อมูลตำแหน่งสำหรับงานนี้');
+                return;
+            }
+            
+            const currentPlant = document.getElementById('currentPlant').textContent;
+            if (currentPlant !== work.plant) {
+                loadMap(work.plant);
+            }
+            
+            document.querySelector('.map-section').scrollIntoView({ 
+                behavior: 'smooth', block: 'start' 
+            });
+        }
+        
+        function highlightRow(index) {
+            console.log('Highlight row:', index);
+        }
+    </script>
 </body>
 </html>
