@@ -121,17 +121,15 @@
             padding: 15px 20px; font-weight: 600; font-size: 16px;
         }
         
-        /* ✅ FIX 1: ให้ wrapper ไม่ scroll แนวนอน + กำหนดความสูง */
+        /* ✅ FIX 1: ให้ wrapper ปรับขนาดตามรูปอัตโนมัติ */
         .map-wrapper {
             position: relative; 
             background: #f7fafc;
-            min-height: 400px; /* เพิ่มความสูงขั้นต่ำ */
-            max-height: 600px; /* กำหนดความสูงสูงสุด */
             max-width: 100%;
-            overflow: hidden; /* เปลี่ยนจาก overflow: auto */
+            overflow: hidden;
             display: flex;
-            align-items: center; /* Center รูปในแนวตั้ง */
-            justify-content: center; /* Center รูปในแนวนอน */
+            align-items: center;
+            justify-content: center;
         }
         
         /* ✅ FIX 2: ให้ container เป็น block ปกติ */
