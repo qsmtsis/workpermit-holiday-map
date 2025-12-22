@@ -123,9 +123,14 @@
         
         .map-wrapper {
             position: relative; background: #f7fafc;
-            min-height: 500px; display: flex;
-            align-items: center; justify-content: center;
+            min-height: 500px;
             overflow: auto; max-width: 100%;
+        }
+        
+        .map-container-inner {
+            position: relative;
+            display: inline-block;
+            margin: auto;
         }
         
         .map-image { 
@@ -133,18 +138,31 @@
         }
         
         .marker {
-            position: absolute; width: 35px; height: 35px;
-            background: #ef4444; color: white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 16px; border: 3px solid white;
+            position: absolute;
+            min-width: 40px; 
+            height: 40px;
+            padding: 0 5px;
+            background: #ef4444; 
+            color: white; 
+            border-radius: 20px;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-weight: bold; 
+            font-size: 14px; 
+            border: 3px solid white;
             box-shadow: 0 4px 10px rgba(239, 68, 68, 0.5);
-            transform: translate(-50%, -50%); cursor: pointer;
-            transition: all 0.3s; z-index: 10;
+            transform: translate(-50%, -50%); 
+            cursor: pointer;
+            transition: all 0.3s; 
+            z-index: 10;
+            white-space: nowrap;
         }
         
         .marker:hover {
-            transform: translate(-50%, -50%) scale(1.2);
+            transform: translate(-50%, -50%) scale(1.15);
             box-shadow: 0 6px 15px rgba(239, 68, 68, 0.7);
+            z-index: 100;
         }
         
         .loading {
@@ -554,7 +572,11 @@
         const mapWrapper = document.getElementById('mapWrapper');
         currentMapImage = imageDataUrl;
         
-        mapWrapper.innerHTML = `<img src="${imageDataUrl}" class="map-image" id="mapImage">`;
+        mapWrapper.innerHTML = `
+            <div class="map-container-inner" id="mapContainerInner">
+                <img src="${imageDataUrl}" class="map-image" id="mapImage">
+            </div>
+        `;
         
         const mapImage = document.getElementById('mapImage');
         mapImage.onload = function() { 
@@ -565,7 +587,9 @@
     }
     
     function displayAllMarkers(plant) {
-        const mapWrapper = document.getElementById('mapWrapper');
+        const mapContainer = document.getElementById('mapContainerInner');
+        if (!mapContainer) return;
+        
         document.querySelectorAll('.marker').forEach(m => m.remove());
         
         const worksToShow = allWorks.filter(work => 
@@ -582,7 +606,13 @@
                 marker.style.top = `${loc.y}%`;
                 marker.textContent = loc.number;
                 marker.title = `เลขที่: ${work.requestNumber}\nรายละเอียด: ${work.projectDetails}`;
-                mapWrapper.appendChild(marker);
+                
+                marker.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    alert(`จุดที่ ${loc.number}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}`);
+                });
+                
+                mapContainer.appendChild(marker);
             });
         });
     }
