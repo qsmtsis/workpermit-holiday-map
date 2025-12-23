@@ -688,15 +688,15 @@
             tableHTML += `<tr>
                 <td><strong>${work.runningNumber}</strong></td>
                 <td>
-                    <span class="eye-icon" onclick="event.stopPropagation();showDetailModal(allWorks[${index}])" title="ดูรายละเอียด">👁️</span>
+                    <span class="eye-icon" onclick="showDetailModal(${index})" title="ดูรายละเอียด">👁️</span>
                     ${work.requestNumber}
                 </td>
                 <td>
-                    <span class="eye-icon" onclick="event.stopPropagation();showDetailModal(allWorks[${index}])" title="ดูรายละเอียด">👁️</span>
+                    <span class="eye-icon" onclick="showDetailModal(${index})" title="ดูรายละเอียด">👁️</span>
                     ${work.division}
                 </td>
                 <td>
-                    <span class="eye-icon" onclick="event.stopPropagation();showDetailModal(allWorks[${index}])" title="ดูรายละเอียด">👁️</span>
+                    <span class="eye-icon" onclick="showDetailModal(${index})" title="ดูรายละเอียด">👁️</span>
                     ${work.department}
                 </td>
                 <td>
@@ -710,11 +710,11 @@
                         '<span class="no-data">-</span>'}
                 </td>
                 <td>
-                    <span class="eye-icon" onclick="event.stopPropagation();showDetailModal(allWorks[${index}])" title="ดูรายละเอียด">👁️</span>
+                    <span class="eye-icon" onclick="showDetailModal(${index})" title="ดูรายละเอียด">👁️</span>
                     <span style="max-width:200px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${work.projectDetails}">${work.projectDetails}</span>
                 </td>
                 <td>
-                    <span class="eye-icon" onclick="event.stopPropagation();showDetailModal(allWorks[${index}])" title="ดูรายละเอียด">👁️</span>
+                    <span class="eye-icon" onclick="showDetailModal(${index})" title="ดูรายละเอียด">👁️</span>
                     ${work.supervisorName}
                 </td>
             </tr>`;
@@ -954,7 +954,14 @@
     }
     
     // ✅ Modal Functions
-    function showDetailModal(work) {
+    function showDetailModal(index) {
+        const work = allWorks[index];
+        
+        if (!work) {
+            console.error('Work not found at index:', index);
+            return;
+        }
+        
         document.getElementById('modal-requestNumber').textContent = work.requestNumber;
         document.getElementById('modal-division').textContent = work.division;
         document.getElementById('modal-department').textContent = work.department;
