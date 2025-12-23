@@ -741,14 +741,17 @@
             
             marker.textContent = loc.number;
             
+            // ✅ แสดง multi-point indicator
+            const multiPointInfo = loc.multiPoint ? ` (${loc.pointIndex}/${loc.totalPoints})` : '';
             const riskLabel = (loc.isHighRisk || work.isHighRisk) ? ' ⚠️ HIGH RISK' : '';
             const offsetInfo = `\n(ตำแหน่งเดิม: ${loc.x.toFixed(1)}%, ${loc.y.toFixed(1)}%)`;
-            marker.title = `เลขที่: ${work.requestNumber}${riskLabel}\nรายละเอียด: ${work.projectDetails}${offsetInfo}`;
+            marker.title = `จุดที่: ${loc.number}${multiPointInfo}${riskLabel}\nเลขที่: ${work.requestNumber}\nรายละเอียด: ${work.projectDetails}${offsetInfo}`;
             
             marker.addEventListener('click', function(e) {
                 e.stopPropagation();
                 const offset = Math.sqrt(Math.pow(markerData.x - loc.x, 2) + Math.pow(markerData.y - loc.y, 2));
-                alert(`จุดที่ ${loc.number}${riskLabel}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}\n\nตำแหน่งเดิม: ${loc.x.toFixed(1)}%, ${loc.y.toFixed(1)}%\nตำแหน่งที่แสดง: ${markerData.x.toFixed(1)}%, ${markerData.y.toFixed(1)}%\nระยะเลื่อน: ${offset.toFixed(2)}%`);
+                const multiInfo = loc.multiPoint ? `\n📍 จุดที่ ${loc.pointIndex} จากทั้งหมด ${loc.totalPoints} จุด` : '';
+                alert(`จุดที่ ${loc.number}${multiPointInfo}${riskLabel}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}${multiInfo}\n\nตำแหน่งเดิม: ${loc.x.toFixed(1)}%, ${loc.y.toFixed(1)}%\nตำแหน่งที่แสดง: ${markerData.x.toFixed(1)}%, ${markerData.y.toFixed(1)}%\nระยะเลื่อน: ${offset.toFixed(2)}%`);
             });
             
             debugLog(`Marker ${loc.number}: ${markerData.x.toFixed(2)}%, ${markerData.y.toFixed(2)}%`, 'info');
