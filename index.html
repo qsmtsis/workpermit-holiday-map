@@ -655,50 +655,66 @@
             });
         });
         
-        // ✅ Smart Offset Algorithm - ตรวจจับและเลื่อน markers ที่ใกล้กัน
-        const OVERLAP_THRESHOLD = 3.5; // ถ้าใกล้กันน้อยกว่า 3.5% ถือว่าใกล้เกินไป
-        const OFFSET_AMOUNT = 1.5;     // เลื่อนออก 1.5% แต่ละทิศทาง
+        // ✅ Smart Offset Algorithm V2 - Multi-Pass with increased sensitivity
+        const OVERLAP_THRESHOLD = 4.5; // เพิ่มจาก 3.5 → 4.5 (ตรวจจับใกล้กันมากขึ้น)
+        const OFFSET_AMOUNT = 2.0;     // เพิ่มจาก 1.5 → 2.0 (เลื่อนห่างขึ้น)
+        const MAX_PASSES = 2;          // ✅ รัน 2 รอบ
         
-        debugLog('🔍 Running Smart Offset algorithm...', 'info');
+        debugLog('🔍 Running Smart Offset V2 (Multi-Pass)...', 'info');
         
-        for (let i = 0; i < allMarkers.length; i++) {
-            for (let j = i + 1; j < allMarkers.length; j++) {
-                const marker1 = allMarkers[i];
-                const marker2 = allMarkers[j];
-                
-                // คำนวณระยะห่าง
-                const dx = marker1.x - marker2.x;
-                const dy = marker1.y - marker2.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                // ถ้าใกล้กันเกินไป → เลื่อนออกจากกัน
-                if (distance < OVERLAP_THRESHOLD) {
-                    debugLog(`⚠️ Overlap detected: Marker ${marker1.location.number} & ${marker2.location.number} (distance: ${distance.toFixed(2)}%)`, 'info');
+        for (let pass = 0; pass < MAX_PASSES; pass++) {
+            let adjustmentCount = 0;
+            
+            debugLog(`\n🔄 Pass ${pass + 1}/${MAX_PASSES}`, 'info');
+            
+            for (let i = 0; i < allMarkers.length; i++) {
+                for (let j = i + 1; j < allMarkers.length; j++) {
+                    const marker1 = allMarkers[i];
+                    const marker2 = allMarkers[j];
                     
-                    // เลื่อนแบบ push apart
-                    if (Math.abs(dx) > Math.abs(dy)) {
-                        // ห่างกันในแนวนอนมากกว่า → เลื่อนซ้าย-ขวา
-                        if (dx > 0) {
-                            marker1.x += OFFSET_AMOUNT;
-                            marker2.x -= OFFSET_AMOUNT;
+                    // คำนวณระยะห่าง
+                    const dx = marker1.x - marker2.x;
+                    const dy = marker1.y - marker2.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // ถ้าใกล้กันเกินไป → เลื่อนออกจากกัน
+                    if (distance < OVERLAP_THRESHOLD) {
+                        adjustmentCount++;
+                        debugLog(`⚠️ Overlap detected: Marker ${marker1.location.number} & ${marker2.location.number} (distance: ${distance.toFixed(2)}%)`, 'info');
+                        
+                        // เลื่อนแบบ push apart
+                        if (Math.abs(dx) > Math.abs(dy)) {
+                            // ห่างกันในแนวนอนมากกว่า → เลื่อนซ้าย-ขวา
+                            if (dx > 0) {
+                                marker1.x += OFFSET_AMOUNT;
+                                marker2.x -= OFFSET_AMOUNT;
+                            } else {
+                                marker1.x -= OFFSET_AMOUNT;
+                                marker2.x += OFFSET_AMOUNT;
+                            }
                         } else {
-                            marker1.x -= OFFSET_AMOUNT;
-                            marker2.x += OFFSET_AMOUNT;
+                            // ห่างกันในแนวตั้งมากกว่า → เลื่อนบน-ล่าง
+                            if (dy > 0) {
+                                marker1.y += OFFSET_AMOUNT;
+                                marker2.y -= OFFSET_AMOUNT;
+                            } else {
+                                marker1.y -= OFFSET_AMOUNT;
+                                marker2.y += OFFSET_AMOUNT;
+                            }
                         }
-                    } else {
-                        // ห่างกันในแนวตั้งมากกว่า → เลื่อนบน-ล่าง
-                        if (dy > 0) {
-                            marker1.y += OFFSET_AMOUNT;
-                            marker2.y -= OFFSET_AMOUNT;
-                        } else {
-                            marker1.y -= OFFSET_AMOUNT;
-                            marker2.y += OFFSET_AMOUNT;
-                        }
+                        
+                        debugLog(`   → Adjusted: ${marker1.location.number} (${marker1.originalX.toFixed(1)}%, ${marker1.originalY.toFixed(1)}%) → (${marker1.x.toFixed(1)}%, ${marker1.y.toFixed(1)}%)`, 'info');
+                        debugLog(`   → Adjusted: ${marker2.location.number} (${marker2.originalX.toFixed(1)}%, ${marker2.originalY.toFixed(1)}%) → (${marker2.x.toFixed(1)}%, ${marker2.y.toFixed(1)}%)`, 'info');
                     }
-                    
-                    debugLog(`   → Adjusted: ${marker1.location.number} (${marker1.originalX.toFixed(1)}%, ${marker1.originalY.toFixed(1)}%) → (${marker1.x.toFixed(1)}%, ${marker1.y.toFixed(1)}%)`, 'info');
-                    debugLog(`   → Adjusted: ${marker2.location.number} (${marker2.originalX.toFixed(1)}%, ${marker2.originalY.toFixed(1)}%) → (${marker2.x.toFixed(1)}%, ${marker2.y.toFixed(1)}%)`, 'info');
                 }
+            }
+            
+            debugLog(`✅ Pass ${pass + 1} completed: ${adjustmentCount} overlaps fixed`, 'success');
+            
+            // ถ้าไม่มี overlap ในรอบนี้ → หยุดได้
+            if (adjustmentCount === 0) {
+                debugLog(`✨ No more overlaps detected, stopping early`, 'success');
+                break;
             }
         }
         
@@ -726,11 +742,13 @@
             marker.textContent = loc.number;
             
             const riskLabel = (loc.isHighRisk || work.isHighRisk) ? ' ⚠️ HIGH RISK' : '';
-            marker.title = `เลขที่: ${work.requestNumber}${riskLabel}\nรายละเอียด: ${work.projectDetails}\n(ตำแหน่งเดิม: ${loc.x.toFixed(1)}%, ${loc.y.toFixed(1)}%)`;
+            const offsetInfo = `\n(ตำแหน่งเดิม: ${loc.x.toFixed(1)}%, ${loc.y.toFixed(1)}%)`;
+            marker.title = `เลขที่: ${work.requestNumber}${riskLabel}\nรายละเอียด: ${work.projectDetails}${offsetInfo}`;
             
             marker.addEventListener('click', function(e) {
                 e.stopPropagation();
-                alert(`จุดที่ ${loc.number}${riskLabel}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}\n\nตำแหน่งเดิม: ${loc.x.toFixed(1)}%, ${loc.y.toFixed(1)}%\nตำแหน่งที่แสดง: ${markerData.x.toFixed(1)}%, ${markerData.y.toFixed(1)}%`);
+                const offset = Math.sqrt(Math.pow(markerData.x - loc.x, 2) + Math.pow(markerData.y - loc.y, 2));
+                alert(`จุดที่ ${loc.number}${riskLabel}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}\n\nตำแหน่งเดิม: ${loc.x.toFixed(1)}%, ${loc.y.toFixed(1)}%\nตำแหน่งที่แสดง: ${markerData.x.toFixed(1)}%, ${markerData.y.toFixed(1)}%\nระยะเลื่อน: ${offset.toFixed(2)}%`);
             });
             
             debugLog(`Marker ${loc.number}: ${markerData.x.toFixed(2)}%, ${markerData.y.toFixed(2)}%`, 'info');
