@@ -635,45 +635,107 @@
         
         if (worksToShow.length === 0) {
             debugLog(`ℹ️ No markers found for ${plant} - showing empty map`, 'info');
-            return; // ✅ แสดงแผนที่ว่างเปล่า
+            return;
         }
         
         debugLog(`Image dimensions: ${mapImage.width}x${mapImage.height}`, 'info');
         
+        // ✅ รวบรวม markers ทั้งหมด
+        let allMarkers = [];
         worksToShow.forEach((work) => {
             work.locations.forEach(loc => {
-                const marker = document.createElement('div');
-                marker.className = 'marker';
-                
-                // ✅ เปลี่ยนสีตาม High Risk flag
-                if (loc.isHighRisk || work.isHighRisk) {
-                    // High Risk → สีแดง (เหมือนเดิม)
-                    marker.style.background = 'rgba(239, 68, 68, 0.95)';
-                    debugLog(`⚠️ Marker ${loc.number}: HIGH RISK (Red)`, 'info');
-                } else {
-                    // ปกติ → สีฟ้า
-                    marker.style.background = 'rgba(59, 130, 246, 0.95)';
-                    debugLog(`✓ Marker ${loc.number}: Normal (Blue)`, 'info');
-                }
-                
-                marker.style.left = loc.x + '%';
-                marker.style.top = loc.y + '%';
-                
-                marker.textContent = loc.number;
-                
-                // ✅ เพิ่ม High Risk ใน title
-                const riskLabel = (loc.isHighRisk || work.isHighRisk) ? ' ⚠️ HIGH RISK' : '';
-                marker.title = `เลขที่: ${work.requestNumber}${riskLabel}\nรายละเอียด: ${work.projectDetails}`;
-                
-                marker.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    alert(`จุดที่ ${loc.number}${riskLabel}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}`);
+                allMarkers.push({
+                    work: work,
+                    location: loc,
+                    x: loc.x,
+                    y: loc.y,
+                    originalX: loc.x,
+                    originalY: loc.y
                 });
-                
-                debugLog(`Marker ${loc.number}: ${loc.x.toFixed(2)}%, ${loc.y.toFixed(2)}%`, 'info');
-                
-                mapContainer.appendChild(marker);
             });
+        });
+        
+        // ✅ Smart Offset Algorithm - ตรวจจับและเลื่อน markers ที่ใกล้กัน
+        const OVERLAP_THRESHOLD = 3.5; // ถ้าใกล้กันน้อยกว่า 3.5% ถือว่าใกล้เกินไป
+        const OFFSET_AMOUNT = 1.5;     // เลื่อนออก 1.5% แต่ละทิศทาง
+        
+        debugLog('🔍 Running Smart Offset algorithm...', 'info');
+        
+        for (let i = 0; i < allMarkers.length; i++) {
+            for (let j = i + 1; j < allMarkers.length; j++) {
+                const marker1 = allMarkers[i];
+                const marker2 = allMarkers[j];
+                
+                // คำนวณระยะห่าง
+                const dx = marker1.x - marker2.x;
+                const dy = marker1.y - marker2.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // ถ้าใกล้กันเกินไป → เลื่อนออกจากกัน
+                if (distance < OVERLAP_THRESHOLD) {
+                    debugLog(`⚠️ Overlap detected: Marker ${marker1.location.number} & ${marker2.location.number} (distance: ${distance.toFixed(2)}%)`, 'info');
+                    
+                    // เลื่อนแบบ push apart
+                    if (Math.abs(dx) > Math.abs(dy)) {
+                        // ห่างกันในแนวนอนมากกว่า → เลื่อนซ้าย-ขวา
+                        if (dx > 0) {
+                            marker1.x += OFFSET_AMOUNT;
+                            marker2.x -= OFFSET_AMOUNT;
+                        } else {
+                            marker1.x -= OFFSET_AMOUNT;
+                            marker2.x += OFFSET_AMOUNT;
+                        }
+                    } else {
+                        // ห่างกันในแนวตั้งมากกว่า → เลื่อนบน-ล่าง
+                        if (dy > 0) {
+                            marker1.y += OFFSET_AMOUNT;
+                            marker2.y -= OFFSET_AMOUNT;
+                        } else {
+                            marker1.y -= OFFSET_AMOUNT;
+                            marker2.y += OFFSET_AMOUNT;
+                        }
+                    }
+                    
+                    debugLog(`   → Adjusted: ${marker1.location.number} (${marker1.originalX.toFixed(1)}%, ${marker1.originalY.toFixed(1)}%) → (${marker1.x.toFixed(1)}%, ${marker1.y.toFixed(1)}%)`, 'info');
+                    debugLog(`   → Adjusted: ${marker2.location.number} (${marker2.originalX.toFixed(1)}%, ${marker2.originalY.toFixed(1)}%) → (${marker2.x.toFixed(1)}%, ${marker2.y.toFixed(1)}%)`, 'info');
+                }
+            }
+        }
+        
+        // ✅ วาง markers ด้วยตำแหน่งที่ปรับแล้ว
+        allMarkers.forEach((markerData) => {
+            const work = markerData.work;
+            const loc = markerData.location;
+            
+            const marker = document.createElement('div');
+            marker.className = 'marker';
+            
+            // เปลี่ยนสีตาม High Risk flag
+            if (loc.isHighRisk || work.isHighRisk) {
+                marker.style.background = 'rgba(239, 68, 68, 0.95)';
+                debugLog(`⚠️ Marker ${loc.number}: HIGH RISK (Red)`, 'info');
+            } else {
+                marker.style.background = 'rgba(59, 130, 246, 0.95)';
+                debugLog(`✓ Marker ${loc.number}: Normal (Blue)`, 'info');
+            }
+            
+            // ✅ ใช้ตำแหน่งที่ปรับแล้ว
+            marker.style.left = markerData.x + '%';
+            marker.style.top = markerData.y + '%';
+            
+            marker.textContent = loc.number;
+            
+            const riskLabel = (loc.isHighRisk || work.isHighRisk) ? ' ⚠️ HIGH RISK' : '';
+            marker.title = `เลขที่: ${work.requestNumber}${riskLabel}\nรายละเอียด: ${work.projectDetails}\n(ตำแหน่งเดิม: ${loc.x.toFixed(1)}%, ${loc.y.toFixed(1)}%)`;
+            
+            marker.addEventListener('click', function(e) {
+                e.stopPropagation();
+                alert(`จุดที่ ${loc.number}${riskLabel}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}\n\nตำแหน่งเดิม: ${loc.x.toFixed(1)}%, ${loc.y.toFixed(1)}%\nตำแหน่งที่แสดง: ${markerData.x.toFixed(1)}%, ${markerData.y.toFixed(1)}%`);
+            });
+            
+            debugLog(`Marker ${loc.number}: ${markerData.x.toFixed(2)}%, ${markerData.y.toFixed(2)}%`, 'info');
+            
+            mapContainer.appendChild(marker);
         });
     }
     
