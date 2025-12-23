@@ -174,6 +174,165 @@
             z-index: 100;
         }
         
+        /* ✅ Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: #ffffff;
+            margin: 3% auto;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .close-modal {
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .close-modal:hover {
+            transform: scale(1.2);
+            color: #ffeb3b;
+        }
+        
+        .modal-body {
+            padding: 30px;
+        }
+        
+        .info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            width: 200px;
+            flex-shrink: 0;
+        }
+        
+        .info-value {
+            color: #333;
+            flex: 1;
+        }
+        
+        .jsa-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .jsa-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .jsa-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        
+        .jsa-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .jsa-table tr:hover {
+            background-color: #e3f2fd;
+        }
+        
+        /* ✅ Eye Icon & PDF Button */
+        .eye-icon, .pdf-button {
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+        
+        .eye-icon:hover {
+            transform: scale(1.3);
+            color: #667eea;
+        }
+        
+        .pdf-button {
+            background: #ef4444;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+        }
+        
+        .pdf-button:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.3);
+        }
+        
+        .no-data {
+            color: #999;
+            font-style: italic;
+        }
+        
         .loading {
             text-align: center; padding: 60px 20px; color: #718096;
         }
@@ -511,42 +670,55 @@
         }
         
         let tableHTML = `<table class="status-table"><thead><tr>
-            <th>ลำดับ</th><th>เลขคำขอ</th><th>Plant</th>
-            <th>ส่วน</th><th>แผนก</th><th>ผู้ควบคุมงาน</th>
-            <th>เบอร์โทร</th><th>วันปฏิบัติงาน</th><th>เวลา</th>
-            <th>รายละเอียด</th>
-            <th>K</th><th>L</th><th>M</th><th>N</th>
-            <th>O</th><th>P</th><th>Q</th><th>R</th>
-            <th>จุด</th><th>จัดการ</th>
+            <th>ลำดับ</th>
+            <th>เลขที่คำขอ (Y)</th>
+            <th>ส่วน (C)</th>
+            <th>แผนก (D)</th>
+            <th>Work Permit (AB)</th>
+            <th>JSA PDF (AC)</th>
+            <th>โครงการ (T)</th>
+            <th>ผู้ควบคุมงาน (E)</th>
         </tr></thead><tbody>`;
         
         works.forEach((work, index) => {
-            tableHTML += `<tr onclick="highlightRow(${index})">
+            // ✅ เช็คว่ามี PDF หรือไม่
+            const hasWorkPermit = work.workPermitUrl && work.workPermitUrl !== '-';
+            const hasJSA = work.jsaUrl && work.jsaUrl !== '-';
+            
+            tableHTML += `<tr>
                 <td><strong>${work.runningNumber}</strong></td>
-                <td><strong>${work.requestNumber}</strong></td>
-                <td><span class="plant-badge">${work.plant}</span></td>
-                <td>${work.division}</td>
-                <td>${work.department}</td>
-                <td>${work.supervisorName}</td>
-                <td>${work.supervisorPhone}</td>
-                <td>${work.workDates}</td>
-                <td>${work.workHours}</td>
-                <td style="max-width:200px;overflow:hidden;" title="${work.projectDetails}">${work.projectDetails}</td>
-                <td><span class="checkmark">${work.workTypes.general}</span></td>
-                <td><span class="checkmark">${work.workTypes.hotWork}</span></td>
-                <td><span class="checkmark">${work.workTypes.confinedSpace}</span></td>
-                <td><span class="checkmark">${work.workTypes.workAtHeight}</span></td>
-                <td><span class="checkmark">${work.workTypes.chemical}</span></td>
-                <td><span class="checkmark">${work.workTypes.cerConfined}</span></td>
-                <td><span class="checkmark">${work.workTypes.cerHeight}</span></td>
-                <td>${work.workTypes.sds}</td>
-                <td><strong>${work.locationCount}</strong></td>
                 <td>
-                    <button class="btn-action btn-view-map" onclick="event.stopPropagation();showOnMap(${index})">🗺️</button>
-                    <a href="${work.workPermitUrl}" target="_blank" class="btn-action btn-permit">📄 WP</a>
-                    <a href="${work.jsaUrl}" target="_blank" class="btn-action btn-jsa">📄 JSA</a>
+                    <span class="eye-icon" onclick="event.stopPropagation();showDetailModal(allWorks[${index}])" title="ดูรายละเอียด">👁️</span>
+                    ${work.requestNumber}
+                </td>
+                <td>
+                    <span class="eye-icon" onclick="event.stopPropagation();showDetailModal(allWorks[${index}])" title="ดูรายละเอียด">👁️</span>
+                    ${work.division}
+                </td>
+                <td>
+                    <span class="eye-icon" onclick="event.stopPropagation();showDetailModal(allWorks[${index}])" title="ดูรายละเอียด">👁️</span>
+                    ${work.department}
+                </td>
+                <td>
+                    ${hasWorkPermit ? 
+                        `<a href="${work.workPermitUrl}" target="_blank" class="pdf-button" onclick="event.stopPropagation()">📄 PDF</a>` : 
+                        '<span class="no-data">-</span>'}
+                </td>
+                <td>
+                    ${hasJSA ? 
+                        `<a href="${work.jsaUrl}" target="_blank" class="pdf-button" onclick="event.stopPropagation()">📄 PDF</a>` : 
+                        '<span class="no-data">-</span>'}
+                </td>
+                <td>
+                    <span class="eye-icon" onclick="event.stopPropagation();showDetailModal(allWorks[${index}])" title="ดูรายละเอียด">👁️</span>
+                    <span style="max-width:200px;display:inline-block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${work.projectDetails}">${work.projectDetails}</span>
+                </td>
+                <td>
+                    <span class="eye-icon" onclick="event.stopPropagation();showDetailModal(allWorks[${index}])" title="ดูรายละเอียด">👁️</span>
+                    ${work.supervisorName}
                 </td>
             </tr>`;
+        });
         });
         
         tableHTML += `</tbody></table>`;
@@ -780,7 +952,130 @@
     function highlightRow(index) {
         debugLog(`Clicked row: ${index}`, 'info');
     }
+    
+    // ✅ Modal Functions
+    function showDetailModal(work) {
+        document.getElementById('modal-requestNumber').textContent = work.requestNumber;
+        document.getElementById('modal-division').textContent = work.division;
+        document.getElementById('modal-department').textContent = work.department;
+        document.getElementById('modal-project').textContent = work.projectDetails;
+        document.getElementById('modal-supervisor').textContent = work.supervisorName;
+        document.getElementById('modal-phone').textContent = work.supervisorPhone;
+        document.getElementById('modal-workDates').textContent = work.workDates;
+        document.getElementById('modal-afterHours').textContent = work.afterHours || '-';
+        document.getElementById('modal-workerCount').textContent = work.workerCount || '-';
+        
+        // ✅ Parse และแสดง JSA
+        const jsaContainer = document.getElementById('jsa-container');
+        if (work.jsaDetails && work.jsaDetails.trim()) {
+            jsaContainer.innerHTML = parseJSA(work.jsaDetails);
+        } else {
+            jsaContainer.innerHTML = '<p class="no-data">ไม่มีข้อมูล JSA</p>';
+        }
+        
+        document.getElementById('detailModal').style.display = 'block';
+    }
+    
+    function closeModal() {
+        document.getElementById('detailModal').style.display = 'none';
+    }
+    
+    // ปิด modal เมื่อคลิกนอก content
+    window.onclick = function(event) {
+        const modal = document.getElementById('detailModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+    
+    // ✅ Parse JSA Details
+    function parseJSA(jsaText) {
+        if (!jsaText || !jsaText.trim()) {
+            return '<p class="no-data">ไม่มีข้อมูล JSA</p>';
+        }
+        
+        // แยกแต่ละแถวด้วย /
+        const rows = jsaText.split('/').map(r => r.trim()).filter(r => r);
+        
+        if (rows.length === 0) {
+            return '<p class="no-data">ไม่มีข้อมูล JSA</p>';
+        }
+        
+        // สร้างตาราง
+        let table = '<table class="jsa-table">';
+        table += '<thead><tr><th>ขั้นตอนการทำงาน</th><th>อันตรายที่อาจเกิดขึ้น</th><th>มาตรการป้องกัน</th></tr></thead>';
+        table += '<tbody>';
+        
+        rows.forEach(row => {
+            // แยก columns ด้วย ,
+            const cols = row.split(',').map(c => c.trim());
+            
+            table += '<tr>';
+            // แสดงแต่ละ column หรือ - ถ้าไม่มีข้อมูล
+            for (let i = 0; i < 3; i++) {
+                const cellData = cols[i] || '-';
+                table += `<td>${cellData}</td>`;
+            }
+            table += '</tr>';
+        });
+        
+        table += '</tbody></table>';
+        return table;
+    }
 </script>
+
+<!-- ✅ Modal HTML -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📋 รายละเอียดงาน</h2>
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="info-section">
+                <div class="info-row">
+                    <div class="info-label">เลขที่คำขอ:</div>
+                    <div class="info-value" id="modal-requestNumber"></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">ส่วน:</div>
+                    <div class="info-value" id="modal-division"></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">แผนก:</div>
+                    <div class="info-value" id="modal-department"></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">โครงการ:</div>
+                    <div class="info-value" id="modal-project"></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">ชื่อผู้ควบคุมงาน:</div>
+                    <div class="info-value" id="modal-supervisor"></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">เบอร์ผู้ควบคุมงาน:</div>
+                    <div class="info-value" id="modal-phone"></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">วันที่ปฏิบัติงาน:</div>
+                    <div class="info-value" id="modal-workDates"></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">ทำหลัง 17.00 น.:</div>
+                    <div class="info-value" id="modal-afterHours"></div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">จำนวนคน:</div>
+                    <div class="info-value" id="modal-workerCount"></div>
+                </div>
+            </div>
+            
+            <h3 style="margin-top: 30px; color: #667eea;">📊 JSA (Job Safety Analysis)</h3>
+            <div id="jsa-container"></div>
+        </div>
+    </div>
+</div>
     
 </body>
 </html>
