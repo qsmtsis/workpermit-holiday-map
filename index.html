@@ -147,11 +147,11 @@
             object-fit: contain; /* ให้รูปพอดีกล่อง */
         }
         
-        /* ✅ FIX 4: Marker default = สีฟ้า, High Risk = สีแดง (ตั้งค่าใน JS) */
+        /* ✅ FIX 4: Marker ขนาดเล็กลง เพื่อลดการทับซ้อน */
         .marker {
             position: absolute;
-            width: 40px; 
-            height: 40px;
+            width: 30px;  /* ลดจาก 40px → 30px */
+            height: 30px; 
             background: rgba(59, 130, 246, 0.95); /* ✅ Default: สีฟ้า */
             color: white; 
             border-radius: 50%;
@@ -159,9 +159,9 @@
             align-items: center; 
             justify-content: center;
             font-weight: bold; 
-            font-size: 18px; 
-            border: 4px solid white;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            font-size: 13px; /* ลดจาก 18px → 13px */
+            border: 3px solid white; /* ลดจาก 4px → 3px */
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
             transform: translate(-50%, -50%); 
             cursor: pointer;
             transition: all 0.3s; 
@@ -169,8 +169,8 @@
         }
         
         .marker:hover {
-            transform: translate(-50%, -50%) scale(1.15);
-            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.8);
+            transform: translate(-50%, -50%) scale(1.2); /* hover ขยายเล็กน้อย */
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.8);
             z-index: 100;
         }
         
