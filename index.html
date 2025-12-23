@@ -655,12 +655,12 @@
             });
         });
         
-        // ✅ Smart Offset Algorithm V2 - Multi-Pass with increased sensitivity
-        const OVERLAP_THRESHOLD = 4.5; // เพิ่มจาก 3.5 → 4.5 (ตรวจจับใกล้กันมากขึ้น)
-        const OFFSET_AMOUNT = 2.0;     // เพิ่มจาก 1.5 → 2.0 (เลื่อนห่างขึ้น)
-        const MAX_PASSES = 2;          // ✅ รัน 2 รอบ
+        // ✅ Smart Offset Algorithm V3 - Enhanced Multi-Pass
+        const OVERLAP_THRESHOLD = 5.5; // เพิ่มจาก 4.5 → 5.5 (ตรวจจับละเอียดขึ้น)
+        const OFFSET_AMOUNT = 2.5;     // เพิ่มจาก 2.0 → 2.5 (เลื่อนห่างขึ้น)
+        const MAX_PASSES = 3;          // เพิ่มจาก 2 → 3 (รัน 3 รอบ)
         
-        debugLog('🔍 Running Smart Offset V2 (Multi-Pass)...', 'info');
+        debugLog('🔍 Running Smart Offset V3 (Enhanced Multi-Pass)...', 'info');
         
         for (let pass = 0; pass < MAX_PASSES; pass++) {
             let adjustmentCount = 0;
