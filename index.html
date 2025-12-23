@@ -147,12 +147,12 @@
             object-fit: contain; /* ให้รูปพอดีกล่อง */
         }
         
-        /* ✅ FIX 4: Marker ใช้ % แทน px */
+        /* ✅ FIX 4: Marker default = สีฟ้า, High Risk = สีแดง (ตั้งค่าใน JS) */
         .marker {
             position: absolute;
             width: 40px; 
             height: 40px;
-            background: rgba(239, 68, 68, 0.95); 
+            background: rgba(59, 130, 246, 0.95); /* ✅ Default: สีฟ้า */
             color: white; 
             border-radius: 50%;
             display: flex; 
@@ -170,7 +170,7 @@
         
         .marker:hover {
             transform: translate(-50%, -50%) scale(1.15);
-            box-shadow: 0 6px 15px rgba(239, 68, 68, 0.8);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.8);
             z-index: 100;
         }
         
@@ -295,6 +295,10 @@
                 <div class="map-container">
                     <div class="map-header">
                         🗺️ แผนที่สถานที่ปฏิบัติงาน - <span id="currentPlant">เลือก Plant</span>
+                        <span style="float: right; font-size: 12px; font-weight: normal;">
+                            <span style="display: inline-block; width: 12px; height: 12px; background: rgba(59, 130, 246, 0.95); border-radius: 50%; margin: 0 5px;"></span> ปกติ
+                            <span style="display: inline-block; width: 12px; height: 12px; background: rgba(239, 68, 68, 0.95); border-radius: 50%; margin: 0 5px 0 15px;"></span> ⚠️ High Risk
+                        </span>
                     </div>
                     <div class="map-wrapper" id="mapWrapper">
                         <div class="loading">
@@ -641,16 +645,29 @@
                 const marker = document.createElement('div');
                 marker.className = 'marker';
                 
-                // ✅ FIX: ใช้ % แทน pixel
+                // ✅ เปลี่ยนสีตาม High Risk flag
+                if (loc.isHighRisk || work.isHighRisk) {
+                    // High Risk → สีแดง (เหมือนเดิม)
+                    marker.style.background = 'rgba(239, 68, 68, 0.95)';
+                    debugLog(`⚠️ Marker ${loc.number}: HIGH RISK (Red)`, 'info');
+                } else {
+                    // ปกติ → สีฟ้า
+                    marker.style.background = 'rgba(59, 130, 246, 0.95)';
+                    debugLog(`✓ Marker ${loc.number}: Normal (Blue)`, 'info');
+                }
+                
                 marker.style.left = loc.x + '%';
                 marker.style.top = loc.y + '%';
                 
                 marker.textContent = loc.number;
-                marker.title = `เลขที่: ${work.requestNumber}\nรายละเอียด: ${work.projectDetails}`;
+                
+                // ✅ เพิ่ม High Risk ใน title
+                const riskLabel = (loc.isHighRisk || work.isHighRisk) ? ' ⚠️ HIGH RISK' : '';
+                marker.title = `เลขที่: ${work.requestNumber}${riskLabel}\nรายละเอียด: ${work.projectDetails}`;
                 
                 marker.addEventListener('click', function(e) {
                     e.stopPropagation();
-                    alert(`จุดที่ ${loc.number}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}`);
+                    alert(`จุดที่ ${loc.number}${riskLabel}\nเลขที่คำขอ: ${work.requestNumber}\n${work.projectDetails}`);
                 });
                 
                 debugLog(`Marker ${loc.number}: ${loc.x.toFixed(2)}%, ${loc.y.toFixed(2)}%`, 'info');
